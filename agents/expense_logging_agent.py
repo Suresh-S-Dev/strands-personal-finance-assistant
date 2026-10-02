@@ -21,4 +21,5 @@ expense_logging_agent = Agent(
     model=DEFAULT_MODEL,
     system_prompt=SYSTEM_PROMPT,
     tools=[categorize_expense, add_transaction],
+    callback_handler=None,   # ← add this to every Agent() you've built so far
 )
