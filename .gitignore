@@ -34,6 +34,11 @@ htmlcov/
 .tox/
 .nox/
 
+# Runtime data
+logs/
+mcp_integration/reminders.json
+memory/user_profile.json
+
 # Local SQLite databases
 *.db
 *.sqlite

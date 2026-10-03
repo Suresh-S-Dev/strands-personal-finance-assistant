@@ -1,0 +1,8 @@
+.venv
+.git
+logs
+__pycache__
+*.db
+.pytest_cache
+mcp_integration/reminders.json
+memory/user_profile.json
