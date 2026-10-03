@@ -1,6 +1,6 @@
 from collections import defaultdict
 from strands import tool
-from tools.transaction_tools import _get_connection
+from memory.transaction_store import get_connection
 
 
 @tool
@@ -15,14 +15,16 @@ def detect_recurring_bills(name: str = "") -> str:
         Detected recurring merchants with occurrence count, average amount, and dates.
         Returns a message if nothing recurring is found yet.
     """
-    conn = _get_connection()
-    query = "SELECT amount, merchant, category, txn_date FROM transactions WHERE 1=1"
-    params = []
-    if name:
-        query += " AND (LOWER(merchant) LIKE ? OR LOWER(category) LIKE ?)"
-        params.extend([f"%{name.lower()}%", f"%{name.lower()}%"])
-    rows = conn.execute(query, params).fetchall()
-    conn.close()
+    conn = get_connection()
+    try:
+        query = "SELECT amount, merchant, category, txn_date FROM transactions WHERE 1=1"
+        params = []
+        if name:
+            query += " AND (LOWER(merchant) LIKE ? OR LOWER(category) LIKE ?)"
+            params.extend([f"%{name.lower()}%", f"%{name.lower()}%"])
+        rows = conn.execute(query, params).fetchall()
+    finally:
+        conn.close()
 
     grouped = defaultdict(list)
     for amount, merchant, category, txn_date in rows:

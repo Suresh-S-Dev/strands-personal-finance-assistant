@@ -1,28 +1,28 @@
 import sqlite3
 from datetime import date
+
 from strands import tool
 
-DB_PATH = "pfa_transactions.db"
+from memory.retry import retry_with_backoff
+from memory.transaction_store import get_connection
 
 
-def _get_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS transactions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            amount REAL NOT NULL,
-            merchant TEXT NOT NULL,
-            category TEXT NOT NULL,
-            txn_date TEXT NOT NULL
+@retry_with_backoff(max_attempts=3, exceptions=(sqlite3.OperationalError,))
+def _write_transaction(amount, merchant, category, txn_date):
+    conn = get_connection()
+    try:
+        cursor = conn.execute(
+            "INSERT INTO transactions (amount, merchant, category, txn_date) VALUES (?, ?, ?, ?)",
+            (amount, merchant, category, txn_date),
         )
-        """
-    )
-    return conn
+        conn.commit()
+        return cursor.lastrowid
+    finally:
+        conn.close()
 
 
 @tool
-def add_transaction(amount: float, merchant: str, category: str, txn_date: str = "") -> str:
+def add_transaction(amount: float, merchant: str, category: str, txn_date: str = "", confirmed: bool = False) -> str:
     """Save a new expense transaction.
 
     Args:
@@ -30,19 +30,16 @@ def add_transaction(amount: float, merchant: str, category: str, txn_date: str =
         merchant: Where the money was spent.
         category: Expense category — call categorize_expense first if unsure.
         txn_date: ISO date (YYYY-MM-DD). Defaults to today if left blank.
+        confirmed: Set True only after the user has explicitly confirmed a
+            large amount. Required above the configured confirmation
+            threshold — see LargeExpenseGuardrail; calls without it above
+            the threshold will be rejected before this function even runs.
 
     Returns:
         A confirmation string including the new transaction's id.
     """
     txn_date = txn_date or date.today().isoformat()
-    conn = _get_connection()
-    cursor = conn.execute(
-        "INSERT INTO transactions (amount, merchant, category, txn_date) VALUES (?, ?, ?, ?)",
-        (amount, merchant, category, txn_date),
-    )
-    conn.commit()
-    txn_id = cursor.lastrowid
-    conn.close()
+    txn_id = _write_transaction(amount, merchant, category, txn_date)
     return f"Saved transaction #{txn_id}: ${amount:.2f} at {merchant} ({category}) on {txn_date}"
 
 
@@ -57,17 +54,19 @@ def query_transactions(category: str = "", month: str = "") -> str:
     Returns:
         A formatted list of matching transactions plus their total.
     """
-    conn = _get_connection()
-    query = "SELECT amount, merchant, category, txn_date FROM transactions WHERE 1=1"
-    params = []
-    if category:
-        query += " AND category = ?"
-        params.append(category)
-    if month:
-        query += " AND txn_date LIKE ?"
-        params.append(f"{month}%")
-    rows = conn.execute(query, params).fetchall()
-    conn.close()
+    conn = get_connection()
+    try:
+        query = "SELECT amount, merchant, category, txn_date FROM transactions WHERE 1=1"
+        params = []
+        if category:
+            query += " AND category = ?"
+            params.append(category)
+        if month:
+            query += " AND txn_date LIKE ?"
+            params.append(f"{month}%")
+        rows = conn.execute(query, params).fetchall()
+    finally:
+        conn.close()
 
     if not rows:
         return "No matching transactions found."

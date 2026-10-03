@@ -1,6 +1,6 @@
 from strands import Agent, tool
 from models.model_config import DEFAULT_MODEL
-from tools.transaction_tools import _get_connection
+from memory.transaction_store import get_connection
 
 SYSTEM_PROMPT = """You are a Spending Trend Analyst.
 
@@ -23,7 +23,7 @@ def detect_spending_trend(category: str) -> str:
     Returns:
         A short narrative on whether a meaningful spending trend/anomaly exists.
     """
-    conn = _get_connection()
+    conn = get_connection()
     rows = conn.execute(
         "SELECT txn_date, amount FROM transactions WHERE category = ? ORDER BY txn_date",
         (category,),
