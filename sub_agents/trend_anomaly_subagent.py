@@ -1,14 +1,9 @@
 from strands import Agent, tool
 from models.model_config import DEFAULT_MODEL
 from memory.transaction_store import get_connection
+from prompts import load_prompt
 
-SYSTEM_PROMPT = """You are a Spending Trend Analyst.
-
-You're given a category's spending totals across several months. State plainly
-whether the most recent month is a meaningful deviation (roughly 30%+ swing) from
-the prior pattern, and briefly why it might matter. If spending is stable, say so —
-don't manufacture a pattern that isn't there.
-"""
+SYSTEM_PROMPT = load_prompt("trend_anomaly")
 
 _trend_agent = Agent(model=DEFAULT_MODEL, system_prompt=SYSTEM_PROMPT)
 

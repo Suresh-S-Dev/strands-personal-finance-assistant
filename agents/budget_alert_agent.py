@@ -3,13 +3,9 @@ from strands import Agent
 from hooks.logging_hooks import LoggingHooks
 from hooks.tool_call_counter import ToolCallCounterHook
 from models.model_config import DEFAULT_MODEL
+from prompts import load_prompt
 
-SYSTEM_PROMPT = """You are the Budget Alert Agent.
-
-You're shown a budget status report indicating the user has gone over budget in
-some category. Write one short, friendly, non-judgmental sentence encouraging
-them to take a look. No guilt-tripping, no financial advice — just a gentle nudge.
-"""
+SYSTEM_PROMPT = load_prompt("budget_alert")
 
 budget_alert_agent = Agent(
     model=DEFAULT_MODEL,

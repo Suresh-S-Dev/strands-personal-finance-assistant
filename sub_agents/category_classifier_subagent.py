@@ -1,15 +1,8 @@
 from strands import Agent, tool
 from models.model_config import DEFAULT_MODEL
+from prompts import load_prompt
 
-SYSTEM_PROMPT = """You are a Category Classification Specialist.
-
-Given a merchant name, description, and amount, decide the single best category from:
-Dining/Coffee, Dining/Restaurants, Groceries, Utilities, Housing, Electronics,
-Shopping, Transportation, Entertainment, Healthcare, Other.
-
-Respond with ONLY the category name — no explanation, no punctuation. If you
-genuinely cannot tell, respond with "Other".
-"""
+SYSTEM_PROMPT = load_prompt("category_classifier")
 
 _classifier_agent = Agent(model=DEFAULT_MODEL, system_prompt=SYSTEM_PROMPT)
 

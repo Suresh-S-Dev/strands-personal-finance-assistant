@@ -85,6 +85,7 @@ memory/                     SQLite transactions, user profile, session window, r
 mcp_integration/            local reminder server and the client the bill agent uses
 config/                     budget limits and the confirmation threshold
 models/                     model id and the classification schema
+prompts/                    system prompt text, one file per agent
 ```
 
 Reminders are a local MCP server (`mcp_integration/reminder_server.py`) stored in `mcp_integration/reminders.json`. The bill agent talks to it over stdio. If that server is down, the agent is told to say the reminder system is unreachable rather than claim a reminder was created.

@@ -3,16 +3,9 @@ from strands.types.exceptions import StructuredOutputException
 
 from models.model_config import DEFAULT_MODEL
 from models.schemas import ClassificationResult
+from prompts import load_prompt
 
-SYSTEM_PROMPT = """You are a request classifier for a Personal Finance Assistant.
-
-Classify the user's message into exactly one of:
-- log_expense: the user is reporting money they spent/paid, to be recorded.
-- spending_question: the user is asking about past spending, budgets, or totals.
-- bill_question: the user is asking about recurring bills or due dates.
-- out_of_scope: anything else, including investment, tax, or general financial
-  advice requests — this assistant only tracks spending, it doesn't advise.
-"""
+SYSTEM_PROMPT = load_prompt("llm_classifier")
 
 _classifier_agent = Agent(
     model=DEFAULT_MODEL,
